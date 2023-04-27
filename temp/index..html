@@ -1,54 +1,79 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>지도 검색</title>
+    <meta charset="utf-8">
+    <title>중간 지점 찾기</title>
     <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         #map {
-            width: 100%;
-            height: 500px;
+            width: 85%;
+            height: 100%;
+            float: left;
         }
 
-        #search-form {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
+        #address-container {
+            width: 15%;
+            height: 100%;
+            float: right;
         }
 
-        #search-input {
-            flex: 1;
-            height: 30px;
-            padding: 5px;
-            margin-right: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 16px;
+        #address-container h2 {
+            margin-left: 20px;
         }
 
-        #search-button {
-            height: 30px;
-            padding: 5px 10px;
-            background-color: #2ecc71;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 16px;
+        #search-box {
+            position: absolute;
+            z-index: 2;
+            top: 20px;
+            right: 20px;
+        }
+
+        #address-list {
+            margin: 20px;
+            padding: 0;
+        }
+
+        #address-list li {
+            list-style: none;
             cursor: pointer;
+        }
+
+        #meet-button {
+            position: absolute;
+            z-index: 2;
+            top: 20px;
+            left: 30px;
+        }
+
+        #time-button {
+            position: absolute;
+            z-index: 2;
+            top: 20px;
+            left: 150px;
         }
     </style>
 </head>
 
 <body>
-    <div id="search-form">
-        <input type="text" id="search-input" placeholder="주소를 입력하세요" />
-        <button id="search-button">검색</button>
-    </div>
     <div id="map"></div>
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={REST_API_KEY}&libraries=services"></script>
-    <script src="./script.js"></script>
+    <input type="text" id="search-box" placeholder="주소 검색" />
+    <button id="meet-button">어디서 만나?</button>
+    <button id="time-button" disabled>얼마나 걸려?</button>
+    <div id="address-container">
+        <h2>추가된 주소</h2>
+        <ul id="address-list"></ul>
+        <div id="travel-time"></div>
+    </div>
+    <script type="text/javascript"
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bf86d69b1c14441be58bc12392391dbc&libraries=services"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>

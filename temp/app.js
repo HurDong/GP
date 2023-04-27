@@ -1,50 +1,129 @@
-var mapContainer = document.getElementById("map"), // 지도를 표시할 div
-  mapOption = {
-    center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
-    level: 3, // 지도의 확대 레벨
-  };
+var mapContainer = document.getElementById("map");
+var mapOption = {
+  center: new kakao.maps.LatLng(37.566826, 126.9786567),
+  level: 3,
+};
 
-var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+var map = new kakao.maps.Map(mapContainer, mapOption);
+const markers = [];
+let centerMarker;
 
-// 지도를 클릭했을때 클릭한 위치에 마커를 추가하도록 지도에 클릭이벤트를 등록합니다
-kakao.maps.event.addListener(map, "click", function (mouseEvent) {
-  // 클릭한 위치에 마커를 표시합니다
-  addMarker(mouseEvent.latLng);
+map.addListener("click", function (mouseEvent) {
+  const latlng = mouseEvent.latLng;
+  const marker = new kakao.maps.Marker({ position: latlng });
+  marker.setMap(map);
+  markers.push(marker);
 });
 
-// 지도에 표시된 마커 객체를 가지고 있을 배열입니다
-var markers = [];
+function calculateCenter(markers) {
+  let latSum = 0;
+  let lngSum = 0;
 
-// 마커 하나를 지도위에 표시합니다
-addMarker(new kakao.maps.LatLng(33.450701, 126.570667));
-
-// 마커를 생성하고 지도위에 표시하는 함수입니다
-function addMarker(position) {
-  // 마커를 생성합니다
-  var marker = new kakao.maps.Marker({
-    position: position,
+  markers.forEach(function (marker) {
+    latSum += marker.getPosition().getLat();
+    lngSum += marker.getPosition().getLng();
   });
 
-  // 마커가 지도 위에 표시되도록 설정합니다
-  marker.setMap(map);
-
-  // 생성된 마커를 배열에 추가합니다
-  markers.push(marker);
+  return new kakao.maps.LatLng(
+    latSum / markers.length,
+    lngSum / markers.length
+  );
 }
 
-// 배열에 추가된 마커들을 지도에 표시하거나 삭제하는 함수입니다
-function setMarkers(map) {
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(map);
+// Search
+var searchBox = document.getElementById("search-box");
+var geocoder = new kakao.maps.services.Geocoder();
+
+searchBox.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    searchAddress(searchBox.value);
   }
+});
+
+function searchAddress(keyword) {
+  var ps = new kakao.maps.services.Places(map);
+  ps.keywordSearch(keyword, function (result, status, pagination) {
+    if (status === kakao.maps.services.Status.OK) {
+      showAddressList(result);
+    } else {
+      alert("검색 결과가 없습니다.");
+    }
+  });
 }
 
-// "마커 보이기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에 표시하는 함수입니다
-function showMarkers() {
-  setMarkers(map);
+function showAddressList(addresses) {
+  var searchResultWindow = window.open(
+    "",
+    "searchResultWindow",
+    "width=400,height=600"
+  );
+  searchResultWindow.document.write("<h2>주소 검색 결과</h2>");
+
+  var list = document.createElement("ul");
+  searchResultWindow.document.body.appendChild(list);
+
+  addresses.forEach(function (address) {
+    var li = document.createElement("li");
+    li.innerText = address.place_name + " - " + address.address_name;
+    li.onclick = function () {
+      addAddressMarker(address);
+      searchResultWindow.close();
+    };
+    list.appendChild(li);
+  });
 }
 
-// "마커 감추기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에서 삭제하는 함수입니다
-function hideMarkers() {
-  setMarkers(null);
+function addAddressMarker(address) {
+  var latlng = new kakao.maps.LatLng(address.y, address.x);
+  var marker = new kakao.maps.Marker({ position: latlng });
+  marker.setMap(map);
+  markers.push(marker);
+
+  var addressList = document.getElementById("address-list");
+  var li = document.createElement("li");
+  li.innerText = address.place_name + " - " + address.address_name;
+  addressList.appendChild(li);
 }
+
+// 중간 지점 계산 및 표시
+document.getElementById("meet-button").addEventListener("click", function () {
+  if (markers.length >= 2) {
+    if (centerMarker) {
+      centerMarker.setMap(null);
+    }
+    const centerLatLng = calculateCenter(markers);
+    centerMarker = new kakao.maps.Marker({
+      position: centerLatLng,
+      image: new kakao.maps.MarkerImage(
+        "https://cdn.pixabay.com/photo/2014/04/03/10/03/google-309740_960_720.png",
+        new kakao.maps.Size(40, 40)
+      ),
+    });
+    centerMarker.setMap(map);
+    document.getElementById("time-button").disabled = false;
+  } else {
+    alert("적어도 2개의 마커가 필요합니다.");
+  }
+});
+
+// 시간 계산 창 호출
+document.getElementById("time-button").addEventListener("click", function () {
+  const travelTimeWindow = window.open(
+    "",
+    "travelTimeWindow",
+    "width=400,height=600"
+  );
+  travelTimeWindow.document.write(
+    "<h2>각 주소에서 중간 지점까지의 이동 시간</h2>"
+  );
+
+  const list = document.createElement("ul");
+  travelTimeWindow.document.body.appendChild(list);
+
+  // 각 주소에 대한 시간 계산 (예시로 표시)
+  for (let i = 0; i < markers.length; i++) {
+    const li = document.createElement("li");
+    li.innerText = `${i + 1}번: ${Math.floor(Math.random() * 60) + 20}분`;
+    list.appendChild(li);
+  }
+});

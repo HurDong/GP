@@ -49,14 +49,14 @@
             position: absolute;
             z-index: 2;
             top: 20px;
-            left: 30px;
+            left: 150px;
         }
 
-        #time-button {
+        #reset-button {
             position: absolute;
             z-index: 2;
             top: 20px;
-            left: 150px;
+            left: 30px;
         }
     </style>
 </head>
@@ -65,11 +65,10 @@
     <div id="map"></div>
     <input type="text" id="search-box" placeholder="주소 검색" />
     <button id="meet-button">어디서 만나?</button>
-    <button id="time-button" disabled>얼마나 걸려?</button>
+    <button id="reset-button">마커 초기화</button>
     <div id="address-container">
         <h2>추가된 주소</h2>
         <ul id="address-list"></ul>
-        <div id="travel-time"></div>
     </div>
     <script type="text/javascript"
         src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bf86d69b1c14441be58bc12392391dbc&libraries=services"></script>
