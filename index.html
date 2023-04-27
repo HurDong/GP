@@ -12,6 +12,26 @@
             padding: 0;
         }
 
+        button {
+            background-color: #e7d800;
+            border: none;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            padding: 10px 20px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2600ff;
+        }
+
+        button:focus {
+            outline: none;
+        }
+
         #map {
             width: 85%;
             height: 100%;
@@ -49,7 +69,7 @@
             position: absolute;
             z-index: 2;
             top: 20px;
-            left: 150px;
+            left: 200px;
         }
 
         #reset-button {
@@ -57,6 +77,21 @@
             z-index: 2;
             top: 20px;
             left: 30px;
+        }
+
+        #time-button {
+            position: absolute;
+            z-index: 2;
+            top: 20px;
+            left: 370px;
+        }
+
+        #center-address-container {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -66,6 +101,12 @@
     <input type="text" id="search-box" placeholder="주소 검색" />
     <button id="meet-button">어디서 만나?</button>
     <button id="reset-button">마커 초기화</button>
+    <button id="time-button">얼마나 걸려?</button>
+    <div id="center-address-container">
+        <h2>중간 지점 주소</h2>
+        <p id="center-address"></p>
+    </div>
+
     <div id="address-container">
         <h2>추가된 주소</h2>
         <ul id="address-list"></ul>

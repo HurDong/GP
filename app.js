@@ -5,15 +5,12 @@ var mapOption = {
 };
 
 var map = new kakao.maps.Map(mapContainer, mapOption);
+var zoomControl = new kakao.maps.ZoomControl();
+var infowindow = new kakao.maps.InfoWindow();
+
+map.addControl(zoomControl, kakao.maps.ControlPosition.LEFTBOTTOM);
 const markers = [];
 let centerMarker;
-
-map.addListener("click", function (mouseEvent) {
-  const latlng = mouseEvent.latLng;
-  const marker = new kakao.maps.Marker({ position: latlng });
-  marker.setMap(map);
-  markers.push(marker);
-});
 
 function calculateCenter(markers) {
   let latSum = 0;
@@ -79,6 +76,14 @@ function addAddressMarker(address) {
   marker.setMap(map);
   markers.push(marker);
 
+  // 클릭 이벤트 추가
+  kakao.maps.event.addListener(marker, "click", function () {
+    displayInfowindow(
+      marker,
+      address.place_name + " - " + address.address_name
+    );
+  });
+
   var addressList = document.getElementById("address-list");
   var li = document.createElement("li");
   li.innerText = address.place_name + " - " + address.address_name;
@@ -95,15 +100,27 @@ document.getElementById("meet-button").addEventListener("click", function () {
     centerMarker = new kakao.maps.Marker({
       position: centerLatLng,
       image: new kakao.maps.MarkerImage(
-        "https://cdn.pixabay.com/photo/2014/04/03/10/03/google-309740_960_720.png",
+        "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
         new kakao.maps.Size(40, 40)
       ),
     });
     centerMarker.setMap(map);
+
+    // 중간 지점 마커에 정보 창 추가
+    getAddressFromLatLng(
+      centerLatLng.getLat(),
+      centerLatLng.getLng(),
+      function (address) {
+        kakao.maps.event.addListener(centerMarker, "click", function () {
+          displayInfowindow(centerMarker, "중간 지점 - " + address);
+        });
+      }
+    );
   } else {
     alert("적어도 2개의 마커가 필요합니다.");
   }
 });
+
 // 마커 초기화 기능
 document.getElementById("reset-button").addEventListener("click", function () {
   markers.forEach(function (marker) {
@@ -120,4 +137,41 @@ document.getElementById("reset-button").addEventListener("click", function () {
   while (addressList.firstChild) {
     addressList.removeChild(addressList.firstChild);
   }
+});
+
+function showCenterAddress(latlng) {
+  geocoder.coord2RegionCode(
+    latlng.getLng(),
+    latlng.getLat(),
+    function (result, status) {
+      if (status === kakao.maps.services.Status.OK) {
+        const centerAddress = result[0].address_name;
+        document.getElementById("center-address").innerText = centerAddress;
+      }
+    }
+  );
+}
+
+function displayInfowindow(marker, title) {
+  var content =
+    '<div style="padding:5px;max-width:200px;white-space:normal;word-wrap:break-word;z-index:1;">' +
+    title +
+    "</div>";
+
+  infowindow.setContent(content);
+  infowindow.open(map, marker);
+}
+
+function getAddressFromLatLng(lat, lng, callback) {
+  geocoder.coord2Address(lng, lat, function (result, status) {
+    if (status === kakao.maps.services.Status.OK) {
+      var detailAddress = result[0].address;
+      var address = detailAddress.address_name;
+      callback(address);
+    }
+  });
+}
+
+kakao.maps.event.addListener(map, "click", function () {
+  infowindow.close();
 });
