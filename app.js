@@ -1,3 +1,4 @@
+// 지도 생성 및 초기화
 var mapContainer = document.getElementById("map");
 var mapOption = {
   center: new kakao.maps.LatLng(37.553, 126.9249),
@@ -12,6 +13,7 @@ map.addControl(zoomControl, kakao.maps.ControlPosition.LEFTBOTTOM);
 const markers = [];
 let centerMarker;
 
+// 마커들의 중심점 계산 함수
 function calculateCenter(markers) {
   let latSum = 0;
   let lngSum = 0;
@@ -27,7 +29,7 @@ function calculateCenter(markers) {
   );
 }
 
-// Search
+// 검색 기능
 var searchBox = document.getElementById("search-box");
 var geocoder = new kakao.maps.services.Geocoder();
 
@@ -37,6 +39,7 @@ searchBox.addEventListener("keydown", function (event) {
   }
 });
 
+// 주소 검색 함수
 function searchAddress(keyword) {
   var ps = new kakao.maps.services.Places(map);
   ps.keywordSearch(keyword, function (result, status, pagination) {
@@ -48,6 +51,7 @@ function searchAddress(keyword) {
   });
 }
 
+// 주소 검색 결과 출력 함수
 function showAddressList(addresses) {
   var searchResultWindow = window.open(
     "",
@@ -70,13 +74,13 @@ function showAddressList(addresses) {
   });
 }
 
+// 주소에 마커 추가 함수
 function addAddressMarker(address) {
   var latlng = new kakao.maps.LatLng(address.y, address.x);
   var marker = new kakao.maps.Marker({ position: latlng });
   marker.setMap(map);
   markers.push(marker);
 
-  // 클릭 이벤트 추가
   kakao.maps.event.addListener(marker, "click", function () {
     displayInfowindow(marker, address.place_name);
   });
@@ -85,19 +89,15 @@ function addAddressMarker(address) {
   var li = document.createElement("li");
   li.innerText = address.place_name + " - " + address.address_name;
 
-  // 'li' 요소에 클릭 이벤트를 추가합니다.
   li.addEventListener("click", function () {
-    // 이동할 위도, 경도 위치를 생성합니다.
     var moveLatLng = new kakao.maps.LatLng(address.y, address.x);
-
-    // 지도 중심을 부드럽게 이동시킵니다.
     map.panTo(moveLatLng);
   });
 
   addressList.appendChild(li);
 }
 
-// 중간 지점 계산 및 표시
+// 중간 지점 계산 버튼 클릭 이벤트
 document.getElementById("meet-button").addEventListener("click", function () {
   if (markers.length >= 2) {
     if (centerMarker) {
@@ -113,25 +113,28 @@ document.getElementById("meet-button").addEventListener("click", function () {
     });
     centerMarker.setMap(map);
 
-    // 중간 지점 마커에 정보 창 추가
     getAddressFromLatLng(
       centerLatLng.getLat(),
       centerLatLng.getLng(),
-      function (address) {
+      function (result) {
+        const address = result.address;
+        const roadAddress = result.roadAddress;
+        const title =
+          "중간 지점 - " +
+          address +
+          (roadAddress ? " (" + roadAddress + ")" : "");
         kakao.maps.event.addListener(centerMarker, "click", function () {
-          displayInfowindow(centerMarker, "중간 지점 - " + address);
+          displayInfowindow(centerMarker, title);
         });
       }
     );
-
-    // 중간 지점 주소를 우측에 표시
     showCenterAddress(centerLatLng);
   } else {
     alert("적어도 2개의 마커가 필요합니다.");
   }
 });
 
-// 마커 초기화 기능
+// 리셋 버튼 클릭 이벤트
 document.getElementById("reset-button").addEventListener("click", function () {
   markers.forEach(function (marker) {
     marker.setMap(null);
@@ -142,13 +145,13 @@ document.getElementById("reset-button").addEventListener("click", function () {
     centerMarker = null;
   }
 
-  // 주소 목록 초기화
   var addressList = document.getElementById("address-list");
   while (addressList.firstChild) {
     addressList.removeChild(addressList.firstChild);
   }
 });
 
+// 중간 지점 주소 출력 함수
 function showCenterAddress(latlng) {
   geocoder.coord2Address(
     latlng.getLng(),
@@ -162,6 +165,7 @@ function showCenterAddress(latlng) {
   );
 }
 
+// 정보창 표시 함수
 function displayInfowindow(marker, title) {
   var content =
     '<div style="padding:5px;max-width:200px;white-space:normal;word-wrap:break-word;z-index:1;">' +
@@ -172,21 +176,24 @@ function displayInfowindow(marker, title) {
   infowindow.open(map, marker);
 }
 
+// 위도와 경도로부터 주소 가져오기 함수
 function getAddressFromLatLng(lat, lng, callback) {
   geocoder.coord2Address(lng, lat, function (result, status) {
     if (status === kakao.maps.services.Status.OK) {
       var detailAddress = result[0].address;
       var address = detailAddress.address_name;
-      callback(address);
+      var roadAddress = result[0].road_address;
+      callback({ address: address, roadAddress: roadAddress });
     }
   });
 }
 
+// 지도 클릭 이벤트
 kakao.maps.event.addListener(map, "click", function () {
   infowindow.close();
 });
 
-// 맛집 검색 버튼 클릭 이벤트
+// 중간 지점 주변 맛집 검색 버튼 클릭 이벤트
 document
   .getElementById("search-restaurants")
   .addEventListener("click", function () {
@@ -200,6 +207,7 @@ document
     }
   });
 
+// 맛집 검색 함수
 function searchRestaurants(keyword, centerLatLng) {
   var ps = new kakao.maps.services.Places(map);
   ps.keywordSearch(
@@ -218,6 +226,7 @@ function searchRestaurants(keyword, centerLatLng) {
   );
 }
 
+// 검색된 맛집 마커 표시 함수
 function displayRestaurantMarkers(restaurants) {
   restaurants.forEach(function (restaurant) {
     var latlng = new kakao.maps.LatLng(restaurant.y, restaurant.x);
@@ -229,8 +238,6 @@ function displayRestaurantMarkers(restaurants) {
       ),
     });
     marker.setMap(map);
-
-    // 클릭 이벤트 추가
     kakao.maps.event.addListener(marker, "click", function () {
       displayInfowindow(marker, restaurant.place_name);
     });
