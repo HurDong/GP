@@ -93,6 +93,13 @@
             margin-top: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
+        #search-restaurants {
+            position: absolute;
+            z-index: 2;
+            top: 20px;
+            left: 540px;
+        }
     </style>
 </head>
 
@@ -102,11 +109,11 @@
     <button id="meet-button">어디서 만나?</button>
     <button id="reset-button">마커 초기화</button>
     <button id="time-button">얼마나 걸려?</button>
+    <button id="search-restaurants">맛집 검색</button>
     <div id="center-address-container">
         <h2>중간 지점 주소</h2>
-        <p id="center-address"></p>
+        <p id="center-address" data-lat="" data-lng=""></p>
     </div>
-
     <div id="address-container">
         <h2>추가된 주소</h2>
         <ul id="address-list"></ul>

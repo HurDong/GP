@@ -78,15 +78,22 @@ function addAddressMarker(address) {
 
   // 클릭 이벤트 추가
   kakao.maps.event.addListener(marker, "click", function () {
-    displayInfowindow(
-      marker,
-      address.place_name + " - " + address.address_name
-    );
+    displayInfowindow(marker, address.place_name);
   });
 
   var addressList = document.getElementById("address-list");
   var li = document.createElement("li");
   li.innerText = address.place_name + " - " + address.address_name;
+
+  // 'li' 요소에 클릭 이벤트를 추가합니다.
+  li.addEventListener("click", function () {
+    // 이동할 위도, 경도 위치를 생성합니다.
+    var moveLatLng = new kakao.maps.LatLng(address.y, address.x);
+
+    // 지도 중심을 부드럽게 이동시킵니다.
+    map.panTo(moveLatLng);
+  });
+
   addressList.appendChild(li);
 }
 
@@ -116,6 +123,9 @@ document.getElementById("meet-button").addEventListener("click", function () {
         });
       }
     );
+
+    // 중간 지점 주소를 우측에 표시
+    showCenterAddress(centerLatLng);
   } else {
     alert("적어도 2개의 마커가 필요합니다.");
   }
@@ -140,12 +150,12 @@ document.getElementById("reset-button").addEventListener("click", function () {
 });
 
 function showCenterAddress(latlng) {
-  geocoder.coord2RegionCode(
+  geocoder.coord2Address(
     latlng.getLng(),
     latlng.getLat(),
     function (result, status) {
       if (status === kakao.maps.services.Status.OK) {
-        const centerAddress = result[0].address_name;
+        const centerAddress = result[0].address.address_name;
         document.getElementById("center-address").innerText = centerAddress;
       }
     }
@@ -175,3 +185,54 @@ function getAddressFromLatLng(lat, lng, callback) {
 kakao.maps.event.addListener(map, "click", function () {
   infowindow.close();
 });
+
+// 맛집 검색 버튼 클릭 이벤트
+document
+  .getElementById("search-restaurants")
+  .addEventListener("click", function () {
+    if (centerMarker) {
+      const centerLatLng = centerMarker.getPosition();
+      const keyword =
+        document.getElementById("center-address").innerText + " 주변 맛집";
+      searchRestaurants(keyword, centerLatLng);
+    } else {
+      alert("중간 지점을 먼저 계산해주세요.");
+    }
+  });
+
+function searchRestaurants(keyword, centerLatLng) {
+  var ps = new kakao.maps.services.Places(map);
+  ps.keywordSearch(
+    keyword,
+    function (result, status) {
+      if (status === kakao.maps.services.Status.OK) {
+        displayRestaurantMarkers(result);
+      } else {
+        alert("검색 결과가 없습니다.");
+      }
+    },
+    {
+      location: centerLatLng,
+      radius: 1000,
+    }
+  );
+}
+
+function displayRestaurantMarkers(restaurants) {
+  restaurants.forEach(function (restaurant) {
+    var latlng = new kakao.maps.LatLng(restaurant.y, restaurant.x);
+    var marker = new kakao.maps.Marker({
+      position: latlng,
+      image: new kakao.maps.MarkerImage(
+        "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+        new kakao.maps.Size(24, 35)
+      ),
+    });
+    marker.setMap(map);
+
+    // 클릭 이벤트 추가
+    kakao.maps.event.addListener(marker, "click", function () {
+      displayInfowindow(marker, restaurant.place_name);
+    });
+  });
+}
