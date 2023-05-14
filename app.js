@@ -60,6 +60,37 @@ function showAddressList(addresses) {
   );
   searchResultWindow.document.write("<h2>주소 검색 결과</h2>");
 
+  // 스타일 태그 추가
+  var style = document.createElement("style");
+  style.innerHTML = `
+  body {
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+  }
+
+  h2 {
+    color: #333;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    border: 1px solid #ddd;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+  }
+
+  li:hover {
+    background-color: #ddd;
+  }
+  `;
+  searchResultWindow.document.head.appendChild(style);
+
   var list = document.createElement("ul");
   searchResultWindow.document.body.appendChild(list);
 
@@ -87,7 +118,13 @@ function addAddressMarker(address) {
 
   var addressList = document.getElementById("address-list");
   var li = document.createElement("li");
-  li.innerText = address.place_name + " - " + address.address_name;
+
+  // addressList의 현재 아이템 수를 얻어서 번호를 만듭니다.
+  var number = addressList.getElementsByTagName("li").length + 1;
+
+  // 주소 앞에 번호를 붙여서 텍스트를 설정합니다.
+  li.innerText =
+    number + ". " + address.place_name + " - " + address.address_name;
 
   li.addEventListener("click", function () {
     var moveLatLng = new kakao.maps.LatLng(address.y, address.x);
@@ -121,8 +158,9 @@ document.getElementById("meet-button").addEventListener("click", function () {
         const roadAddress = result.roadAddress;
         const title =
           "중간 지점 - " +
-          address +
-          (roadAddress ? " (" + roadAddress + ")" : "");
+          address.address +
+          (address.roadAddress ? " (" + address.roadAddress + ")" : "");
+
         kakao.maps.event.addListener(centerMarker, "click", function () {
           displayInfowindow(centerMarker, title);
         });
@@ -149,6 +187,9 @@ document.getElementById("reset-button").addEventListener("click", function () {
   while (addressList.firstChild) {
     addressList.removeChild(addressList.firstChild);
   }
+
+  // 중간 지점 주소 초기화
+  document.getElementById("center-address").innerText = "";
 });
 
 // 중간 지점 주소 출력 함수
@@ -181,8 +222,10 @@ function getAddressFromLatLng(lat, lng, callback) {
   geocoder.coord2Address(lng, lat, function (result, status) {
     if (status === kakao.maps.services.Status.OK) {
       var detailAddress = result[0].address;
-      var address = detailAddress.address_name;
-      var roadAddress = result[0].road_address;
+      var address = detailAddress ? detailAddress.address_name : undefined;
+      var roadAddress = result[0].road_address
+        ? result[0].road_address.address_name
+        : undefined;
       callback({ address: address, roadAddress: roadAddress });
     }
   });
@@ -193,15 +236,45 @@ kakao.maps.event.addListener(map, "click", function () {
   infowindow.close();
 });
 
-// 중간 지점 주변 맛집 검색 버튼 클릭 이벤트
+// 중간 지점 계산 버튼 클릭 이벤트
+document.getElementById("meet-button").addEventListener("click", function () {
+  if (markers.length >= 2) {
+    if (centerMarker) {
+      centerMarker.setMap(null);
+    }
+    const centerLatLng = calculateCenter(markers);
+    centerMarker = new kakao.maps.Marker({
+      position: centerLatLng,
+      image: new kakao.maps.MarkerImage(
+        "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+        new kakao.maps.Size(40, 40)
+      ),
+    });
+    centerMarker.setMap(map);
+
+    getAddressFromLatLng(
+      centerLatLng.getLat(),
+      centerLatLng.getLng(),
+      function (result) {
+        const address = result.address ? result.address : "주소 정보 없음";
+        const title = "중간 지점 - " + address;
+        kakao.maps.event.addListener(centerMarker, "click", function () {
+          displayInfowindow(centerMarker, title);
+        });
+      }
+    );
+    showCenterAddress(centerLatLng);
+  } else {
+    alert("적어도 2개의 마커가 필요합니다.");
+  }
+});
+// 맛집 검색 버튼 클릭 이벤트
 document
   .getElementById("search-restaurants")
   .addEventListener("click", function () {
     if (centerMarker) {
       const centerLatLng = centerMarker.getPosition();
-      const keyword =
-        document.getElementById("center-address").innerText + " 주변 맛집";
-      searchRestaurants(keyword, centerLatLng);
+      searchRestaurants("맛집", centerLatLng);
     } else {
       alert("중간 지점을 먼저 계산해주세요.");
     }
@@ -225,10 +298,16 @@ function searchRestaurants(keyword, centerLatLng) {
     }
   );
 }
+// 맛집 마커를 저장할 배열을 추가합니다.
+const restaurantMarkers = [];
 
-// 검색된 맛집 마커 표시 함수
+// 검색된 맛집 마커 표시 함수를 수정합니다.
 function displayRestaurantMarkers(restaurants) {
-  restaurants.forEach(function (restaurant) {
+  const restaurantList = document.getElementById("restaurant-list");
+  restaurantList.innerHTML = ""; // Clear the list first
+  restaurantMarkers.length = 0; // Clear the restaurant markers array
+
+  restaurants.forEach(function (restaurant, index) {
     var latlng = new kakao.maps.LatLng(restaurant.y, restaurant.x);
     var marker = new kakao.maps.Marker({
       position: latlng,
@@ -238,8 +317,20 @@ function displayRestaurantMarkers(restaurants) {
       ),
     });
     marker.setMap(map);
+    restaurantMarkers.push(marker); // Add the marker to the array
+
     kakao.maps.event.addListener(marker, "click", function () {
       displayInfowindow(marker, restaurant.place_name);
     });
+
+    // Add restaurant to the list
+    const li = document.createElement("li");
+    li.textContent = `${index + 1}. ${restaurant.place_name} - ${
+      restaurant.address_name
+    }`;
+    li.addEventListener("click", function () {
+      map.panTo(marker.getPosition()); // Move the map to the marker's position
+    });
+    restaurantList.appendChild(li);
   });
 }
