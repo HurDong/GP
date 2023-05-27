@@ -1,25 +1,19 @@
 const express = require("express");
-const openai = require("openai");
-const bodyParser = require("body-parser");
-
-openai.apiKey = "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"; // 실제 키로 바꾸세요.
+const openai = require("openai-official");
+require("dotenv").config();
 
 const app = express();
+const api = new openai.OpenAiGpt3({ apiKey: process.env.OPENAI_API_KEY });
 
-app.use(bodyParser.json());
-
-app.post("/generate", async (req, res) => {
-  const prompt = req.body.prompt;
-
+app.get("/generate-text", async (req, res) => {
+  const prompt = req.query.prompt;
   try {
-    const gptResponse = await openai.Completion.create({
-      engine: "text-davinci-003",
+    const gptResponse = await api.complete({
+      engine: "text-davinci-002",
       prompt: prompt,
-      max_tokens: 100,
+      max_tokens: 60,
     });
-
-    const message = gptResponse.choices[0].text.strip();
-    res.json({ message: message });
+    res.json({ generatedText: gptResponse.choices[0].text });
   } catch (error) {
     console.error(error);
     res
@@ -29,7 +23,4 @@ app.post("/generate", async (req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+app.listen(port, () => console.log(`Listening on port ${port}`));
