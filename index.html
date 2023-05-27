@@ -10,13 +10,33 @@
             height: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
+        }
+
+        #nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: #ffcd36;
+            height: 50px;
+            line-height: 50px;
+        }
+
+        #nav-bar button {
+            flex: 1;
+            margin: 0;
+            border-right: 1px solid #000;
+            text-align: center;
+        }
+
+        #nav-bar button:last-child {
+            border-right: none;
         }
 
         button {
-            background-color: #e7d800;
+            background-color: #ffcd36;
             border: none;
             border-radius: 3px;
-            color: white;
+            color: #302A24;
             cursor: pointer;
             font-size: 16px;
             margin-top: 10px;
@@ -25,7 +45,9 @@
         }
 
         button:hover {
-            background-color: #2600ff;
+            background-color: #302A24;
+            color: #fff;
+            /* 추가된 부분 */
         }
 
         button:focus {
@@ -49,73 +71,99 @@
         }
 
         #search-box {
-            position: absolute;
+            position: relative;
             z-index: 2;
-            top: 20px;
-            right: 20px;
+            top: 0;
+            width: 100%;
+            padding: 10px;
         }
 
         #address-list {
-            margin: 20px;
-            padding: 0;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #888;
+            border-radius: 5px;
+            background-color: #fff;
         }
 
-        #address-list li {
-            list-style: none;
-            cursor: pointer;
+        #address-list li,
+        #restaurant-list li {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            color: #333;
+            transition: background-color 0.2s;
         }
 
-        #meet-button {
-            position: absolute;
-            z-index: 2;
-            top: 20px;
-            left: 200px;
+        #address-list li:hover,
+        #restaurant-list li:hover {
+            background-color: #ddd;
         }
 
-        #reset-button {
-            position: absolute;
-            z-index: 2;
-            top: 20px;
-            left: 30px;
+        #restaurant-list-container {
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        #time-button {
-            position: absolute;
-            z-index: 2;
-            top: 20px;
-            left: 370px;
+        #restaurant-list-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
         }
 
         #center-address-container {
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
             margin-top: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-size: 1.2em;
+            border: 1px solid #888;
+            border-radius: 5px;
+            background-color: #eee;
+            color: #333;
         }
 
-        #search-restaurants {
+        #siteLogo {
             position: absolute;
-            z-index: 2;
-            top: 20px;
-            left: 540px;
+            width: 100px;
+            /* 로고 크기를 조절하려면 이 값을 바꾸세요. */
+            z-index: 150;
+            /* 필요에 따라 이 값을 더 높게 설정할 수 있습니다. */
         }
     </style>
+
 </head>
 
 <body>
+    <a href="javascript:location.reload()">
+        <img id="siteLogo" src="https://github.com/HurDong/img/blob/main/Where_to_kakao_logo.png?raw=true" alt="사이트 로고">
+    </a>
+
+    <div id="nav-bar">
+        <button id="meet-button">❓어디서 만나❓</button>
+        <button id="reset-button">✨마커 초기화✨</button>
+        <button id="search-restaurants">🔍맛집 검색🔍</button>
+    </div>
+    <input type="text" id="search-box" placeholder="주소를 입력해주세요." />
     <div id="map"></div>
-    <input type="text" id="search-box" placeholder="주소 검색" />
-    <button id="meet-button">어디서 만나?</button>
-    <button id="reset-button">마커 초기화</button>
-    <button id="time-button">얼마나 걸려?</button>
-    <button id="search-restaurants">맛집 검색</button>
+    <div id="restaurant-section">
+        <h3>🍽️맛집 리스트🍽️</h3>
+        <div id="restaurant-list-navigation">
+            <button id="prev-restaurants">이전</button>
+            <button id="next-restaurants">다음</button>
+        </div>
+        <div id="restaurant-list-container">
+            <ul id="restaurant-list"></ul>
+        </div>
+    </div>
+
+
     <div id="center-address-container">
-        <h2>중간 지점 주소</h2>
+        <h2>🙌중간 지점 주소🙌</h2>
         <p id="center-address" data-lat="" data-lng=""></p>
     </div>
     <div id="address-container">
-        <h2>추가된 주소</h2>
+        <h2>➕추가된 주소➕</h2>
         <ul id="address-list"></ul>
     </div>
     <script type="text/javascript"
