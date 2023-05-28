@@ -1,26 +1,32 @@
 const express = require("express");
-const openai = require("openai-official");
-require("dotenv").config();
+const openai = require("openai");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+openai.apiKey = process.env.OPENAI_API_KEY;
 
 const app = express();
-const api = new openai.OpenAiGpt3({ apiKey: process.env.OPENAI_API_KEY });
 
 app.get("/generate-text", async (req, res) => {
   const prompt = req.query.prompt;
   try {
-    const gptResponse = await api.complete({
+    const gptResponse = await openai.Completion.create({
       engine: "text-davinci-002",
       prompt: prompt,
-      max_tokens: 60,
+      max_tokens: 100,
     });
-    res.json({ generatedText: gptResponse.choices[0].text });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while generating a message." });
+
+    return res.json({
+      generated_text: gptResponse.choices[0].text,
+    });
+  } catch (err) {
+    return res.json({
+      error: "An error occurred while generating a message.",
+    });
   }
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Listening on port ${port}`));
+
+app.listen(port, () => console.log(`Server running on port ${port}`));

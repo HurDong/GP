@@ -183,6 +183,12 @@ document.getElementById("reset-button").addEventListener("click", function () {
     centerMarker = null;
   }
 
+  // 맛집 마커 배열을 순회하면서 모든 맛집 마커를 지웁니다.
+  restaurantMarkers.forEach(function (marker) {
+    marker.setMap(null);
+  });
+  restaurantMarkers.length = 0; // 맛집 마커 배열을 초기화합니다.
+
   var addressList = document.getElementById("address-list");
   while (addressList.firstChild) {
     addressList.removeChild(addressList.firstChild);
@@ -190,6 +196,12 @@ document.getElementById("reset-button").addEventListener("click", function () {
 
   // 중간 지점 주소 초기화
   document.getElementById("center-address").innerText = "";
+
+  // 맛집 리스트 초기화
+  var restaurantList = document.getElementById("restaurant-list");
+  while (restaurantList.firstChild) {
+    restaurantList.removeChild(restaurantList.firstChild);
+  }
 });
 
 // 중간 지점 주소 출력 함수
