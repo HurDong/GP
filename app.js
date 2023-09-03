@@ -393,3 +393,7 @@ function displayRestaurantMarkers(restaurants) {
     restaurantList.appendChild(li);
   });
 }
+// 로그인 버튼에 이벤트 리스너 추가
+document.getElementById("login-button").addEventListener("click", function () {
+  window.location.href = "login.html"; // login.html로 이동
+});

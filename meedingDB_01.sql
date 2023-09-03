@@ -11,7 +11,7 @@ CREATE TABLE Users (
 );
 CREATE TABLE Restaurants (
     id INT AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
+    restname VARCHAR(100) NOT NULL,
     location VARCHAR(100) NOT NULL,
     description TEXT,
     PRIMARY KEY (id)
@@ -26,3 +26,7 @@ CREATE TABLE Reviews (
     FOREIGN KEY (user_id) REFERENCES Users(id),
     FOREIGN KEY (restaurant_id) REFERENCES Restaurants(id)
 );
+
+select * from users;
+select * from restaurants;
+select * from reviews;
